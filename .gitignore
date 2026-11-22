@@ -1,0 +1,11 @@
+build/
+build-*/
+*.nro
+*.nacp
+*.nso
+*.elf
+*.pfs0
+*.lst
+*.map
+.vscode/
+.vs/
