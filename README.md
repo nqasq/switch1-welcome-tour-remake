@@ -8,7 +8,7 @@ Rebuilt from scratch for a hard-modded Nintendo Switch 1 (Atmosphere homebrew).
 - This project contains NO Nintendo game files, art, music, or code.
 - No dumped NSP / NUP / game data. No copied assets.
 - All code, art, and music here must be original, made for this project.
-- Private repo, for personal learning and planning only.
+- Public repo, for personal learning and planning only.
 
 ## Goal
 
