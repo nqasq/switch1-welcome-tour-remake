@@ -28,6 +28,7 @@ constexpr float kMaxPitch = 1.45f;
 // Optional dev flags:
 //   --frames N         quit after N frames (for quick smoke tests)
 //   --screenshot FILE  save the last frame as a .bmp before quitting
+//   --camera X,Y,Z,YAW,PITCH  start somewhere else (metres, radians)
 const char* argValue(int argc, char** argv, const char* flag) {
     for (int i = 1; i + 1 < argc; ++i)
         if (std::strcmp(argv[i], flag) == 0) return argv[i + 1];
@@ -120,6 +121,10 @@ int main(int argc, char** argv) {
     render::Camera camera;
     camera.position = {0.0f, kEyeHeight, 2.5f};
     camera.pitch = -0.32f; // look down a little, at the model on its pedestal
+    if (const char* cam = argValue(argc, argv, "--camera")) {
+        std::sscanf(cam, "%f,%f,%f,%f,%f", &camera.position.x, &camera.position.y, &camera.position.z,
+                    &camera.yaw, &camera.pitch);
+    }
     float grabDistance = 0.0f;
 
     std::printf("Gravity room running on %s\n", platform::name());

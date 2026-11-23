@@ -4,6 +4,8 @@
 
 ![电脑上跑的重力展厅](docs/pc-gravity-room.png)
 
+![凑近看展台上的 Switch 1](docs/pc-stand-closeup.png)
+
 ## 素材规则（很重要）
 
 - 仓库里不放任何任天堂的游戏文件、美术、音乐或代码。
@@ -47,20 +49,37 @@
 
 ### Windows（推荐 MSYS2）
 
-1. 安装 [MSYS2](https://www.msys2.org/)，打开 **MSYS2 UCRT64** 终端。
+1. 安装 [MSYS2](https://www.msys2.org/)，从开始菜单打开 **MSYS2 UCRT64** 终端。后面的命令都在这个终端里运行，不要用 PowerShell 或 cmd。
 2. 装工具：
    ```
    pacman -S --needed mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-ninja mingw-w64-ucrt-x86_64-SDL2 git
    ```
-3. 编译、测试、运行：
+3. 下载代码：
+   ```
+   git clone https://github.com/nqasq/switch1-welcome-tour-remake.git
+   cd switch1-welcome-tour-remake
+   ```
+4. 编译、测试、运行：
    ```
    cmake -S . -B build -G Ninja
    cmake --build build
    ctest --test-dir build --output-on-failure
    ./build/switch1-welcome-tour.exe
    ```
+   走到房间入口前就能看到展台上的 Switch 1 模型（启动后视角就对着它）。
+
+关于模型文件：
+
+- `assets/models/switch1_handheld.glb` 已经在仓库里，**不用装 Blender 也能直接编译运行**。只有改了 `tools/blender/switch1_handheld.py` 才需要重新导出。
+- 编译时会自动把 `assets/` 复制到 `build/assets/`，程序从 exe 旁边的 `assets/models/` 读模型。如果单独挪动 exe，要把 `assets` 文件夹一起带上，否则会提示 `Model not loaded`，房间照样能跑，只是展台上是空的。
+- 想在 MSYS2 终端外面双击 exe 运行，要先把它依赖的 DLL（SDL2.dll 等）复制到 exe 旁边：
+  ```
+  ldd build/switch1-welcome-tour.exe | grep -i ucrt64 | awk '{print $3}' | xargs -I{} cp {} build/
+  ```
 
 用 Visual Studio 也可以：装好 vcpkg 后 `vcpkg install sdl2`，再用 CMake 打开项目文件夹，配置时带上 vcpkg 的 toolchain 文件。
+
+**说明：** Windows 步骤是按 MSYS2 的标准用法写的，还没在 Windows 上实际跑过；Linux 版已经编译运行通过。
 
 ### Linux
 
@@ -78,7 +97,11 @@ ctest --test-dir build --output-on-failure
 ./build/switch1-welcome-tour --frames 300 --screenshot shot.bmp
 ```
 
-跑 300 帧后把最后一帧存成图片再退出，方便快速检查画面。
+跑 300 帧后把最后一帧存成图片再退出，方便快速检查画面。加上 `--camera X,Y,Z,YAW,PITCH`（米、弧度）可以换一个起始视角，比如凑近看展台：
+
+```
+./build/switch1-welcome-tour --frames 400 --camera 0.12,1.18,2.05,-0.25,-0.35 --screenshot stand.bmp
+```
 
 ## 打包成 Switch 的 .nro
 
