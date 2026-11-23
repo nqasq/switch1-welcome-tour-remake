@@ -18,7 +18,9 @@ uniform float uNormalSign;
 out vec3 vNormal;
 out vec3 vWorld;
 void main() {
-    vNormal = aNormal * uNormalSign;
+    // mat3(uModel) is enough here: boxes are only scaled along their own axes,
+    // and models are placed with rotation plus uniform scale.
+    vNormal = mat3(uModel) * aNormal * uNormalSign;
     vWorld = (uModel * vec4(aPos, 1.0)).xyz;
     gl_Position = uMvp * vec4(aPos, 1.0);
 }
@@ -130,6 +132,11 @@ bool Renderer::init(std::string* error) {
 }
 
 void Renderer::shutdown() {
+    for (GpuModel& m : models_) {
+        gl::DeleteBuffers(1, &m.vbo);
+        gl::DeleteVertexArrays(1, &m.vao);
+    }
+    models_.clear();
     if (vbo_) gl::DeleteBuffers(1, &vbo_);
     if (vao_) gl::DeleteVertexArrays(1, &vao_);
     if (program_) gl::DeleteProgram(program_);
@@ -146,16 +153,53 @@ void Renderer::beginFrame(int width, int height, const Camera& camera) {
     gl::BindVertexArray(vao_);
 }
 
-void Renderer::drawBox(Vec3 center, Vec3 halfExtents, Vec3 color, bool inside, bool checker) {
-    Mat4 model = Mat4::translate(center) * Mat4::scale(halfExtents);
+void Renderer::setCommonUniforms(const Mat4& model, Vec3 color, float normalSign, bool checker) {
     Mat4 mvp = viewProj_ * model;
     gl::UniformMatrix4fv(uMvp_, 1, GL_FALSE, mvp.m);
     gl::UniformMatrix4fv(uModel_, 1, GL_FALSE, model.m);
     gl::Uniform3f(uColor_, color.x, color.y, color.z);
-    gl::Uniform1f(uNormalSign_, inside ? -1.0f : 1.0f);
+    gl::Uniform1f(uNormalSign_, normalSign);
     gl::Uniform1f(uChecker_, checker ? 1.0f : 0.0f);
+}
+
+void Renderer::drawBox(Vec3 center, Vec3 halfExtents, Vec3 color, bool inside, bool checker) {
+    Mat4 model = Mat4::translate(center) * Mat4::scale(halfExtents);
+    gl::BindVertexArray(vao_);
+    setCommonUniforms(model, color, inside ? -1.0f : 1.0f, checker);
     gl::CullFace(inside ? GL_FRONT : GL_BACK);
     gl::DrawArrays(GL_TRIANGLES, 0, 36);
+}
+
+int Renderer::uploadModel(const assets::MeshData& mesh) {
+    if (mesh.vertices.empty()) return -1;
+    GpuModel m;
+    m.parts = mesh.parts;
+    gl::GenVertexArrays(1, &m.vao);
+    gl::BindVertexArray(m.vao);
+    gl::GenBuffers(1, &m.vbo);
+    gl::BindBuffer(GL_ARRAY_BUFFER, m.vbo);
+    gl::BufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(mesh.vertices.size() * sizeof(float)),
+                   mesh.vertices.data(), GL_STATIC_DRAW);
+    gl::VertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), nullptr);
+    gl::EnableVertexAttribArray(0);
+    gl::VertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float),
+                            reinterpret_cast<const void*>(3 * sizeof(float)));
+    gl::EnableVertexAttribArray(1);
+    gl::BindVertexArray(vao_);
+    models_.push_back(m);
+    return static_cast<int>(models_.size()) - 1;
+}
+
+void Renderer::drawModel(int id, const Mat4& model) {
+    if (id < 0 || id >= static_cast<int>(models_.size())) return;
+    const GpuModel& m = models_[id];
+    gl::BindVertexArray(m.vao);
+    gl::CullFace(GL_BACK);
+    for (const auto& part : m.parts) {
+        setCommonUniforms(model, part.color, 1.0f, false);
+        gl::DrawArrays(GL_TRIANGLES, part.firstVertex, part.vertexCount);
+    }
+    gl::BindVertexArray(vao_);
 }
 
 bool Renderer::saveScreenshot(const char* path, int width, int height) {

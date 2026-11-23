@@ -17,10 +17,10 @@ include $(DEVKITPRO)/libnx/switch_rules
 #---------------------------------------------------------------------------------
 TARGET      := switch1-welcome-tour
 BUILD       := build-switch
-SOURCES     := src src/physics src/render src/input src/platform
+SOURCES     := src src/physics src/render src/input src/platform src/assets
 DATA        :=
-INCLUDES    := src
-ROMFS       :=
+INCLUDES    := src third_party/cgltf
+ROMFS       := assets
 
 APP_TITLE   := Switch1 Welcome Tour Remake
 APP_AUTHOR  := nqasq

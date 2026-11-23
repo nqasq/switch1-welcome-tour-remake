@@ -13,7 +13,7 @@
 
 ## 现在有什么
 
-第一个展厅：**重力展厅**。一个 8×3×8 米的房间，第一人称视角走动，几个方块受重力下落、弹跳、叠放，可以抓起来拖着走。
+第一个展厅：**重力展厅**。一个 8×3×8 米的房间，第一人称视角走动，几个方块受重力下落、弹跳、叠放，可以抓起来拖着走。入口前的展台上放着一台 1:1 的 Switch 1 模型。
 
 代码结构：
 
@@ -23,8 +23,11 @@
 | `src/render` | 最小 OpenGL 3.3 渲染：自带的函数加载器、方块网格、带格子的房间、简单光照 |
 | `src/input` | 电脑：键盘鼠标；Switch：摇杆、按键、触屏 |
 | `src/platform` | 电脑和 Switch 不同的部分都在这里，用 `#ifdef __SWITCH__` 隔开 |
+| `src/assets` | glTF（.glb）模型加载，用 [cgltf](https://github.com/jkuhlmann/cgltf)（MIT 协议，放在 `third_party/cgltf`） |
 | `src/demo.*` | 重力展厅的场景（方块的位置、大小、颜色） |
-| `tests` | 物理测试，不需要显卡就能跑 |
+| `tools/blender` | 用脚本生成模型的 Blender 脚本 |
+| `assets/models` | 导出好的模型，电脑版放在程序旁边，Switch 版打包进 .nro 的 romfs |
+| `tests` | 物理测试和模型测试，不需要显卡就能跑 |
 
 以后加新的场（比如月球低重力区、风、磁铁）就是再写一个 `Field` 子类。
 
@@ -96,18 +99,38 @@ ctest --test-dir build --output-on-failure
 
 ## 测试情况
 
-- 电脑版（Linux）：编译通过，无警告；9 项物理测试全部通过；在虚拟显示上实际跑了画面（上面的截图）。
-- Switch 版：Makefile 按 devkitPro 官方模板写的，**还没有编译和真机测试过**，Switch 上的按键编号也待真机确认。
+- 电脑版（Linux）：编译通过，无警告；物理测试和模型测试全部通过；在虚拟显示上实际跑了画面，模型能加载显示（上面的截图）。
+- 模型：Blender 4.0 无界面导出成功，尺寸 239.0 × 102.5 × 28.4 mm（高多出的 0.5 mm 是肩键）。按键位置和摇杆、扳机的厚度分配是估的，要用真机量了再改。
+- Switch 版：Makefile 按 devkitPro 官方模板写的，**还没有编译和真机测试过**，Switch 上的按键编号和 romfs 里读模型也待真机确认。
 
 ## 建模
 
 1:1 建模用的官方尺寸、拆机资料和零件清单见 [docs/modeling-reference.md](docs/modeling-reference.md)。拆机照片只放链接，不放进仓库。
 
+### 模型怎么进游戏
+
+1. 在 Blender 里建模，单位用米，正面朝 -Y（也就是 Blender 的前视图）。
+2. 导出成 `.glb` 放进 `assets/models/`。
+3. 程序启动时用 `assets::loadGltf` 读进来，材质的基础色当作颜色。
+
+现在的 Switch 1 模型是脚本生成的（第一版是 Muse 做的，修正过尺寸和按键布局）：
+
+```
+blender -b --factory-startup --python tools/blender/switch1_handheld.py -- --export assets/models/switch1_handheld.glb
+```
+
+也可以在 Blender 界面里打开脚本运行，看效果：
+
+![Blender 里的 Switch 1 模型](docs/switch1-handheld-blender.png)
+
+改完脚本记得重新导出，再跑一次 `ctest`：模型测试会检查宽 239 mm、高 102 mm、最厚 28.4 mm，以及左蓝右红没有装反。
+
 ## 下一步
 
 1. 用 devkitPro 编出 `.nro`，在硬破 Switch 1 上跑起来。
 2. 定展厅清单（见下面原始计划）。
-3. 方块换成自己做的模型；加"虚拟的自己"。
+3. 用卡尺量真机，修正模型里估计的按键位置；再按建模参考做主板、电池、风扇。
+4. 加"虚拟的自己"。
 
 ---
 

@@ -2,6 +2,8 @@
 // Everything that differs between the PC build and the Switch build lives
 // behind this header, so the rest of the code has no #ifdef __SWITCH__.
 
+#include <string>
+
 namespace platform {
 
 struct WindowConfig {
@@ -18,6 +20,10 @@ void shutdown();
 bool keepRunning();
 
 WindowConfig windowConfig();
+
+// Full path of a file under assets/ (PC: next to the executable;
+// Switch: inside the .nro's romfs).
+std::string assetPath(const std::string& relative);
 const char* name();
 
 } // namespace platform

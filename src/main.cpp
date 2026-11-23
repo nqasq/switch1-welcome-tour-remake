@@ -12,6 +12,7 @@
 #include <memory>
 #include <string>
 
+#include "assets/gltf_loader.h"
 #include "demo.h"
 #include "input/input.h"
 #include "platform/platform.h"
@@ -93,8 +94,32 @@ int main(int argc, char** argv) {
     demo::populate(scene);
     const phys::Aabb room = scene.world.room();
 
+    // The Switch 1 model, at real size (1:1) on a pedestal in front of the start point.
+    constexpr float kPedestalTop = 1.0f;
+    const phys::Vec3 kPedestalPos{0.0f, kPedestalTop * 0.5f, 1.7f};
+    int switchModel = -1;
+    phys::Vec3 modelBottom;
+    {
+        assets::MeshData mesh;
+        std::string modelError;
+        std::string path = platform::assetPath("models/switch1_handheld.glb");
+        if (assets::loadGltf(path, &mesh, &modelError)) {
+            switchModel = renderer.uploadModel(mesh);
+            modelBottom = {(mesh.boundsMin.x + mesh.boundsMax.x) * 0.5f, mesh.boundsMin.y,
+                           (mesh.boundsMin.z + mesh.boundsMax.z) * 0.5f};
+            std::printf("Loaded %s: %d vertices, %zu parts, %.1f x %.1f x %.1f mm\n", path.c_str(),
+                        mesh.vertexCount(), mesh.parts.size(),
+                        (mesh.boundsMax.x - mesh.boundsMin.x) * 1000.0f,
+                        (mesh.boundsMax.y - mesh.boundsMin.y) * 1000.0f,
+                        (mesh.boundsMax.z - mesh.boundsMin.z) * 1000.0f);
+        } else {
+            std::printf("Model not loaded: %s\n", modelError.c_str());
+        }
+    }
+
     render::Camera camera;
     camera.position = {0.0f, kEyeHeight, 2.5f};
+    camera.pitch = -0.32f; // look down a little, at the model on its pedestal
     float grabDistance = 0.0f;
 
     std::printf("Gravity room running on %s\n", platform::name());
@@ -151,6 +176,13 @@ int main(int argc, char** argv) {
             if (i == world.grabbed()) c = c * 1.25f;
             renderer.drawBox(world.body(i).position, world.body(i).halfExtents, c);
         }
+        // Pedestal and the 1:1 Switch 1 standing on it, screen toward the start point.
+        renderer.drawBox(kPedestalPos, {0.18f, kPedestalTop * 0.5f, 0.12f}, {0.55f, 0.53f, 0.50f});
+        if (switchModel >= 0) {
+            phys::Vec3 spot{kPedestalPos.x, kPedestalTop, kPedestalPos.z};
+            renderer.drawModel(switchModel, render::Mat4::translate(spot - modelBottom));
+        }
+
         // Crosshair: a tiny box just in front of the eye.
         renderer.drawBox(camera.position + camera.forward() * 0.5f, {0.003f, 0.003f, 0.003f}, {1, 1, 1});
 

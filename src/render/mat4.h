@@ -35,6 +35,13 @@ struct Mat4 {
         r.at(0, 0) = s.x; r.at(1, 1) = s.y; r.at(2, 2) = s.z;
         return r;
     }
+    static Mat4 rotateY(float radians) {
+        Mat4 r;
+        float c = std::cos(radians), s = std::sin(radians);
+        r.at(0, 0) = c;  r.at(0, 2) = s;
+        r.at(2, 0) = -s; r.at(2, 2) = c;
+        return r;
+    }
     static Mat4 perspective(float fovY, float aspect, float zNear, float zFar) {
         Mat4 r;
         float f = 1.0f / std::tan(fovY * 0.5f);
