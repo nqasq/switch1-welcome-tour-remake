@@ -99,6 +99,10 @@ ctest --test-dir build --output-on-failure
 - 电脑版（Linux）：编译通过，无警告；9 项物理测试全部通过；在虚拟显示上实际跑了画面（上面的截图）。
 - Switch 版：Makefile 按 devkitPro 官方模板写的，**还没有编译和真机测试过**，Switch 上的按键编号也待真机确认。
 
+## 建模
+
+1:1 建模用的官方尺寸、拆机资料和零件清单见 [docs/modeling-reference.md](docs/modeling-reference.md)。拆机照片只放链接，不放进仓库。
+
 ## 下一步
 
 1. 用 devkitPro 编出 `.nro`，在硬破 Switch 1 上跑起来。
