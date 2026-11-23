@@ -31,6 +31,7 @@
 | 来源 | 内容 | 状态 |
 | --- | --- | --- |
 | [任天堂官方规格（HAC-001(-01)）](https://www.nintendo.com/sg/hardware/switch/modal/specs/body.html) | 外形尺寸、重量、屏幕、接口、电池 | 已读 |
+| [任天堂官方 Joy-Con 规格](https://www.nintendo.com/my/hardware/switch/modal/specs/joy-con.html) | Joy-Con 尺寸、重量、按键、电池 | 已读 |
 | [iFixit 初版拆机（HAC-001，2017）](https://www.ifixit.com/Teardown/Nintendo+Switch+Teardown/78263) | 24 步拆解、全部零件和芯片型号、螺丝类型 | 已读 |
 | [iFixit 续航版拆机对比（2019）](https://www.ifixit.com/News/32540/we-tore-down-the-new-nintendo-switch-whats-different) | 续航版和初版的区别、怎么分辨 | 已读 |
 | [iFixit Switch 设备页](https://www.ifixit.com/Device/Nintendo_Switch) | 各零件的单独更换指南，照片更多 | 未细读 |
@@ -49,10 +50,13 @@
 | 电池 | 锂离子，4310 mAh（iFixit 写的是 16 Wh） |
 | 接口 | USB Type-C、3.5 mm 耳机孔、游戏卡槽、microSD 卡槽 |
 | 按键 | 电源键、音量键 |
+| Joy-Con（单个） | 高 102 mm × 宽 35.9 mm × 厚 28.4 mm；左约 49 g，右约 52.1 g；电池 525 mAh |
 
 **由屏幕推算的值（不是官方数据）：** 6.2 英寸 = 157.5 mm 对角线，按 16:9 算，显示区约 137.3 × 77.2 mm。
 
-**官方没给的数据：** 主机本体（不带 Joy-Con）的宽度、单个 Joy-Con 的尺寸、主板/电池/风扇的尺寸。这些要用卡尺量自己的机器，或者在照片里按已知尺寸推比例（见下面"怎么从照片推尺寸"）。
+**由此推算：** 239 − 2 × 35.9 = 167.2 mm，是两个 Joy-Con 之间露出来的主机宽度。网上常说主机本体宽 173 mm，多出的部分应该是插进 Joy-Con 滑轨的那一段，这个数没在官方页面上看到。
+
+**官方没给的数据：** 主机本体的准确宽度、主板/电池/风扇的尺寸、按键的具体位置。这些要用卡尺量自己的机器，或者在照片里按已知尺寸推比例（见下面"怎么从照片推尺寸"）。
 
 ## 拆机顺序和零件清单
 
@@ -115,6 +119,8 @@
 3. 用比例尺换算其他零件的长宽。厚度从侧面照片推，或者直接量。
 4. 推出来的数字在文档里标成"推算"，实测的标成"实测"，方便以后改。
 
-## 模型怎么放进游戏（待定）
+## 模型怎么放进游戏
 
-计划是：在 Blender 里按上面的尺寸手工建模（单位设成毫米），导出成 glTF 或 OBJ，由渲染器加载。具体用哪种格式，等看过 Muse 做的模型文件再定，让加载器适配现有的文件。
+定了用 glTF（`.glb`）：在 Blender 里建模（单位用米，正面朝 -Y），导出到 `assets/models/`，游戏用 `src/assets/gltf_loader` 读进来。具体步骤见 README 的"建模"一节。
+
+整机外形的脚本在 `tools/blender/switch1_handheld.py`。脚本里标了 APPROX 的值（按键位置、摇杆和扳机各占 28.4 mm 里的多少）是估的，量了真机后改那几个数，再重新导出就行。
